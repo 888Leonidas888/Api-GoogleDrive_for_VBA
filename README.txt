@@ -1,0 +1,33 @@
+Este proyecto cubre en su mayoría las funciones que se muestran en el siguiente apartado:
+
+https://developers.google.com/drive/api/v3/reference?apix=true
+
+Listar,copiar,crear, cargar,descargar,generar id,eliminar,limpiar la papelera de reciclaje,actulizar
+el token de forma aútomatica(la pantalla de consentimiento aparecerá una única vez,para ello desarrolle 
+métodos de acceso con tal de bloquear un acceso no autorizadoa  asu aplicación).
+La versión de api google drive que se emplea es la 'v3', debo mencionar
+también que la función de carga reanudable cuenta con 2 tipos de carga:
+
+	-carga reanudable en una unica solictud(envía el total del archivo después de obtener el uri de sesión reanudable)
+	-carga reanudable en varias solicitudes(esta funcionalidad no se encuentra desarrollada hasta el momento)
+
+
+Requisitos:
+
+1.- Contar con una cuenta en Google, y crear un proyecto en Google Cloud PlatForm,necesitamos crear las siguientes credenciales:
+	-Clave de API
+	-ID de cliente de Oauth 
+
+2.-Descargar e instalar el módulo JsonConverter.bas de la siguiente dirección https://github.com/VBA-tools/VBA-JSON,
+esta herramientas es esencial para trabajar con nuestros objetos.
+
+3.-Dentro del VBE deberás activar las siguientes referencias:
+	-MIcrosoft Scripting Runtime
+	-Microsft XML,v6.0
+	-Microsft Activex Data Objects 6.1 Library
+	-Tener instalado Google Chrome
+
+
+Revisa el siguiente canal para mayores ejemplos e instalación:
+
+https://youtube.com/playlist?list=PLebWFysFNi3AuZOqFzKNzqHc6mPkkz1AX
