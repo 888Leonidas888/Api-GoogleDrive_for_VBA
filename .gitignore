@@ -8,4 +8,9 @@ lib others/*
 !lib others/.gitignore
 
 
+URL.txt
+README.md
+reference.txt
+error.json
+
 

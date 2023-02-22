@@ -31,3 +31,7 @@ esta herramientas es esencial para trabajar con nuestros objetos.
 Revisa el siguiente canal para mayores ejemplos e instalación:
 
 https://youtube.com/playlist?list=PLebWFysFNi3AuZOqFzKNzqHc6mPkkz1AX
+
+
+Ver status de peticiones HTTP
+https://developer.mozilla.org/es/docs/Web/HTTP/Status
