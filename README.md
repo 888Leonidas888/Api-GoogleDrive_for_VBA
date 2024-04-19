@@ -149,8 +149,6 @@ Flujo de Oauth 2.0 19/03/2024 16:04:22  >>> new token generated
 
 ### Listar archivos de Google Drive
 
-Para este ejemplo previamente se ha creado un **Google Sheets**, el `id` es la cadena de caracteres mas larga que veas en la barra de direcciones de tu **Google Sheets**, la siguiente imagen es de referencia:
-
 ```vb
 Sub list_drive()
     
