@@ -146,9 +146,9 @@ Public Function Delete(ByVal fileId As String) As Boolean
 
 End Function
 
-Public Function CreateResource() As fileResource
+Public Function CreateResource() As FileResource
     
-    Dim fr As New fileResource
+    Dim fr As New FileResource
     Dim dicResource As Dictionary
     
     Set dicResource = JsonConverter.ParseJson(This.responseText)

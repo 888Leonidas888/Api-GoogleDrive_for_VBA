@@ -57,7 +57,7 @@ Sub copy_file()
         'GO_SUCCESSFUL
         
         If .Operation = GO_SUCCESSFUL Then
-            Dim fr As fileResource
+            Dim fr As FileResource
             
             Set fr = .CreateResource()
             
@@ -178,7 +178,7 @@ Sub generteId()
                 
         If Not c Is Nothing Then
             For i = 1 To c.count
-                Debug.Print c.item(i)
+                Debug.Print c.Item(i)
             Next i
         Else
             Debug.Print "No se genero Ids"
@@ -242,7 +242,7 @@ Sub List()
     Dim fields As String
     Dim pageSize As Integer
 
-    credentialsClient = ThisWorkbook.path + "\credentials\client.json"
+    credentialsClient = ThisWorkbook.path + "\credentials\clientWeb.json"
     credentialsToken = ThisWorkbook.path + "\credentials\token.json"
     credentialsApikey = ThisWorkbook.path + "\credentials\apikey.json"
     
@@ -254,7 +254,7 @@ Sub List()
 '    fields = "nextPageToken,kind,incompleteSearch,files(name,id)"
 '    fields = "files(id,capabilities/canAddChildren)"
     fields = "files(name,id,mimeType)"
-    pageSize = 10
+    pageSize = 2
     
     fo.InitializeFlow credentialsClient, credentialsToken, credentialsApikey, OU_SCOPE_DRIVE
     
@@ -302,7 +302,7 @@ Sub NewFolder()
         'GO_SUCCESSFUL
         
         If .Operation = GO_SUCCESSFUL Then
-            Dim fr As fileResource
+            Dim fr As FileResource
             
             Set fr = .CreateResource()
             
@@ -345,7 +345,7 @@ Sub update_file()
         Rem el método Operation devolverá una constante
         'GO_SUCCESSFUL
         If .Operation = GO_SUCCESSFUL Then
-            Dim fr As fileResource
+            Dim fr As FileResource
             
             Set fr = .CreateResource()
             
@@ -391,7 +391,7 @@ Sub upload_media()
         Rem el método Operation devolverá una constante
         'GO_SUCCESSFUL
         If .Operation = GO_SUCCESSFUL Then
-             Dim fr As fileResource
+             Dim fr As FileResource
             
             Set fr = .CreateResource()
             
@@ -420,14 +420,17 @@ Sub upload_multipart()
     Dim pathFile As String
     Dim parent As String
     
-    pathFile = ThisWorkbook.path + "\multimedia\edificiones.jpg"
-    parent = "195zrZ9lQW7o2QZ-sLDS5aZOo57sUkZ2L"
+    pathFile = ThisWorkbook.path + "\img\google_drive_vba.png"
+    parent = "1EIX-exARi3UxhT1FNac75HvUJ0aN4Oh3"
     
-    credentialsClient = ThisWorkbook.path + "\credentials\client.json"
+    credentialsClient = ThisWorkbook.path + "\credentials\clientWeb.json"
     credentialsToken = ThisWorkbook.path + "\credentials\token.json"
     credentialsApikey = ThisWorkbook.path + "\credentials\apikey.json"
     
-    fo.InitializeFlow credentialsClient, credentialsToken, credentialsApikey, OU_SCOPE_DRIVE
+    fo.InitializeFlow credentialsClient, _
+                        credentialsToken, _
+                        credentialsApikey, _
+                        OU_SCOPE_DRIVE
     
     With drive
         .ConnectionService fo
@@ -436,7 +439,7 @@ Sub upload_multipart()
         Rem el método Operation devolverá una constante
         'GO_SUCCESSFUL
         If .Operation = GO_SUCCESSFUL Then
-             Dim fr As fileResource
+             Dim fr As FileResource
             
             Set fr = .CreateResource()
             
@@ -480,7 +483,7 @@ Sub upload_resumable()
         Rem el método Operation devolverá una constante
         'GO_SUCCESSFUL or GO_CREATED
         If .Operation = GO_SUCCESSFUL Or .Operation = GO_CREATED Then
-            Dim fr As fileResource
+            Dim fr As FileResource
             Set fr = .CreateResource()
             With fr
                 Debug.Print "Id --> "; .id
