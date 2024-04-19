@@ -1,18 +1,5 @@
-#Ignorando carpeta de credenciales, esta por demas decir que son personales
 credentials/*
 !credentials/.gitignore
 
-#Ignorando biblioteca de terceros, ya que estas se deberán descargar de los mismos sitios
-#o en su defecto se incluirán en este repositorio pero igual manera se hará mención sobre ello.
-lib others/*
-!lib others/.gitignore
-
-
 multimedia/*
 !multimedia/.gitignore
-
-README.md
-reference.txt
-
-
-
