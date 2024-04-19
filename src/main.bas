@@ -242,7 +242,7 @@ Sub List()
     Dim fields As String
     Dim pageSize As Integer
 
-    credentialsClient = ThisWorkbook.path + "\credentials\clientWeb.json"
+    credentialsClient = ThisWorkbook.path + "\credentials\clientweb.json"
     credentialsToken = ThisWorkbook.path + "\credentials\token.json"
     credentialsApikey = ThisWorkbook.path + "\credentials\apikey.json"
     
@@ -254,7 +254,7 @@ Sub List()
 '    fields = "nextPageToken,kind,incompleteSearch,files(name,id)"
 '    fields = "files(id,capabilities/canAddChildren)"
     fields = "files(name,id,mimeType)"
-    pageSize = 2
+    pageSize = 3
     
     fo.InitializeFlow credentialsClient, credentialsToken, credentialsApikey, OU_SCOPE_DRIVE
     
@@ -420,17 +420,14 @@ Sub upload_multipart()
     Dim pathFile As String
     Dim parent As String
     
-    pathFile = ThisWorkbook.path + "\img\google_drive_vba.png"
-    parent = "1EIX-exARi3UxhT1FNac75HvUJ0aN4Oh3"
+    pathFile = ThisWorkbook.path + "\multimedia\edificiones.jpg"
+    parent = "195zrZ9lQW7o2QZ-sLDS5aZOo57sUkZ2L"
     
-    credentialsClient = ThisWorkbook.path + "\credentials\clientWeb.json"
+    credentialsClient = ThisWorkbook.path + "\credentials\client.json"
     credentialsToken = ThisWorkbook.path + "\credentials\token.json"
     credentialsApikey = ThisWorkbook.path + "\credentials\apikey.json"
     
-    fo.InitializeFlow credentialsClient, _
-                        credentialsToken, _
-                        credentialsApikey, _
-                        OU_SCOPE_DRIVE
+    fo.InitializeFlow credentialsClient, credentialsToken, credentialsApikey, OU_SCOPE_DRIVE
     
     With drive
         .ConnectionService fo

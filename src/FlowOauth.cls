@@ -89,7 +89,7 @@ Public Sub InitializeFlow(ByVal credentialsClient As String, _
         
         Rem #4.- Guardar el token de acceso para su posterior uso.
             If Me.Operation = GO_SUCCESSFUL Then
-                Dim currentDate As Double
+                Dim currentDate As Long
                 Dim currentDateField As String
                 
                 'agregamos la fecha y la hora menos 5 segundos en la que se escribe el token.
