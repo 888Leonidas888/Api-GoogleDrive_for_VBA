@@ -65,7 +65,7 @@ Public Sub InitializeFlow(ByVal credentialsClient As String, _
         Rem lectura de api_key;client_id;redirect_uris;client_secret
         Call readCredentialsGoogleConsole(credentialsClient, credentialsApikey)
         
-        If ExistsFile(credentialsToken) Then
+        If utils.existsFile(credentialsToken) Then
             Call verifyingToken(credentialsToken)
         Else
             Debug.Print APP_NAME; " "; Now(); " >>> "; "FILE NOT FOUND " & credentialsToken
@@ -89,7 +89,7 @@ Public Sub InitializeFlow(ByVal credentialsClient As String, _
         
         Rem #4.- Guardar el token de acceso para su posterior uso.
             If Me.Operation = GO_SUCCESSFUL Then
-                Dim currentDate As Long
+                Dim currentDate As Double
                 Dim currentDateField As String
                 
                 'agregamos la fecha y la hora menos 5 segundos en la que se escribe el token.
@@ -99,7 +99,7 @@ Public Sub InitializeFlow(ByVal credentialsClient As String, _
                 '----------------------------------------------------
                 
                 Call readTokenBeforeWrite(content)
-                webBrowserHTTP.writeFile content, credentialsToken
+                utils.writeFile content, credentialsToken
                 
                 Debug.Print APP_NAME; " "; Now(); " >>> "; "new token generated"
             Else
@@ -115,9 +115,9 @@ Public Function RevokeToken(ByVal credentialsToken As String) As Boolean
     Dim dicToken As Dictionary
     Dim content As String
     
-    If Not webBrowserHTTP.ExistsFile(credentialsToken) Then Exit Function
+    If Not utils.existsFile(credentialsToken) Then Exit Function
     
-    content = webBrowserHTTP.readFile(credentialsToken)
+    content = utils.readFile(credentialsToken)
     Set dicToken = JsonConverter.ParseJson(content)
     This.yourAccessToken = dicToken("access_token")
     
@@ -154,24 +154,24 @@ Private Sub readCredentialsGoogleConsole(ByVal credentialsClient As String, ByVa
     Dim content As String
     Dim app As String
     
-    If ExistsFile(credentialsApikey) Then
-        content = readFile(credentialsApikey)
+    If utils.existsFile(credentialsApikey) Then
+        content = utils.readFile(credentialsApikey)
         Set dicApikey = JsonConverter.ParseJson(content)
         This.yourApiKey = dicApikey("your_api_key")
     End If
           
-    If ExistsFile(credentialsClient) Then
-        content = readFile(credentialsClient)
+    If utils.existsFile(credentialsClient) Then
+        content = utils.readFile(credentialsClient)
         Set dicClient = JsonConverter.ParseJson(content)
         With dicClient
-            If .exists("web") Then app = "web"
-            If .exists("installed") Then app = "installed"
+            If .Exists("web") Then app = "web"
+            If .Exists("installed") Then app = "installed"
         End With
         
         With This
             .client_id = dicClient(app)("client_id")
             .redirect_uri = dicClient(app)("redirect_uris")(1)
-            .redirect_uri = codificationUrl(.redirect_uri)
+            .redirect_uri = utils.URLEncode(.redirect_uri)
             .client_secret = dicClient(app)("client_secret")
         End With
     End If
@@ -189,12 +189,12 @@ Private Function urlRedirect(ByVal scope As String) As String
         Dim parametersPath As String
  
         response_type = "code"
-        scope = codificationUrl(scope)
+        scope = utils.URLEncode(scope)
         access_type = "offline"
         include_granted_scopes = "true"
         prompt = "consent"
         
-        parametersPath = formatString( _
+        parametersPath = utils.fstring( _
         "?scope={0}&access_type={1}&include_granted_scopes={2}&response_type={3}&redirect_uri={4}&client_id={5}&prompt={6}", _
                         scope, _
                         access_type, _
@@ -213,7 +213,7 @@ Private Function changeCodeForToken(ByVal code As String) As String
     Dim body As String
     Dim headers As New Dictionary
     
-    body = formatString( _
+    body = utils.fstring( _
             "code={0}&client_id={1}&client_secret={2}&redirect_uri={3}&grant_type={4}", _
             code, _
             This.client_id, _
@@ -237,12 +237,12 @@ Private Sub verifyingToken(ByVal credentialsToken As String)
     Dim rsp As Integer
     Dim content As String
     
-    content = webBrowserHTTP.readFile(credentialsToken)
+    content = utils.readFile(credentialsToken)
     Set dicToken = JsonConverter.ParseJson(content)
     
     Debug.Print APP_NAME; " "; Now(); " >>> "; "token verifying"
     
-    If dicToken.exists("error") Or dicToken.exists("error_description") Then
+    If dicToken.Exists("error") Or dicToken.Exists("error_description") Then
         error_ = dicToken("error")
         error_description_ = dicToken("error_description")
         
@@ -264,7 +264,7 @@ Private Sub verifyingToken(ByVal credentialsToken As String)
         Set dicToken = Nothing
         Exit Sub
         
-    ElseIf dicToken.exists("access_token") And dicToken.exists("token_type") Then
+    ElseIf dicToken.Exists("access_token") And dicToken.Exists("token_type") Then
         
         Dim registeredDate As Double
         Dim refresh_token As String
@@ -277,7 +277,7 @@ Private Sub verifyingToken(ByVal credentialsToken As String)
             Debug.Print APP_NAME; " "; Now(); " >>> "; "requests update token"
             Call updateTokenAccess(credentialsToken)
         Else
-            content = webBrowserHTTP.readFile(credentialsToken)
+            content = utils.readFile(credentialsToken)
             Call readTokenBeforeWrite(content)
             Debug.Print APP_NAME; " "; Now(); " >>> "; "using token_access"
         End If
@@ -294,7 +294,7 @@ Private Sub updateTokenAccess(Optional credentialsToken As String)
     Dim content As String
     
     With This
-    body = formatString( _
+    body = utils.fstring( _
         "client_id={0}&client_secret={1}&refresh_token={2}&grant_type=refresh_token", _
         .client_id, .client_secret, .refresh_token)
     End With
@@ -324,7 +324,7 @@ Private Sub updateTokenAccess(Optional credentialsToken As String)
         
     End If
     'guardamos respuesta exitosa o fallida
-    webBrowserHTTP.writeFile content, credentialsToken
+    utils.writeFile content, credentialsToken
     Set headers = Nothing
     
 End Sub
