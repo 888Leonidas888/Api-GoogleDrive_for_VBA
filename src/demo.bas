@@ -1,6 +1,5 @@
 Attribute VB_Name = "demo"
 Function initOauthFlow() As FlowOauth
-    
      
     Dim credentialsClient As String
     Dim credentialsToken As String
@@ -40,7 +39,7 @@ Sub copy_file()
         .connectionService initOauthFlow
         result = .copy(fileID, file)
         
-        If .Operation = GO_SUCCESSFUL Then
+        If .operation = SUCCESSFUL Then
             Debug.Print result
         End If
     End With
@@ -61,14 +60,14 @@ Sub list_file()
         'parametros de consulta
         .Add "q", "name contains 'handbook '"
         'campos a devolver
-        .Add "fields", "files(name,id,parents, mimeType,webContentLink)"
+        .Add "fields", "files(name,id,parents,mimeType,webContentLink)"
     End With
     
     With drive
         .connectionService initOauthFlow
         result = .list(queryParameters)
         
-        If .Operation = GO_SUCCESSFUL Then
+        If .operation = SUCCESSFUL Then
             Debug.Print result
         End If
     End With
@@ -79,14 +78,14 @@ Sub delete_file()
     Dim drive As New GoogleDrive
     Dim fileID As String
     
-    fileID = "1hsDZop6aAI25fpwRp7O6gWbX1fgDRhcd"
+    fileID = "1h6rTrd1Q3cb9NQBnX9WUdmfhZ3Azanl0"
     
     With drive
         .connectionService initOauthFlow
-        .delete (fileID)
+        Debug.Print .delete(fileID)
         
-        If .Operation = GO_NO_CONTENT Then
-            Debug.Print "status "; .Operation
+         If .operation = NO_CONTENT Then
+            Debug.Print "status "; .operation
         End If
     End With
     
@@ -99,8 +98,8 @@ Sub empty_trash()
         .connectionService initOauthFlow
         .emptyTrash
         
-        If .Operation = GO_NO_CONTENT Then
-            Debug.Print "status "; .Operation
+        If .operation = NO_CONTENT Then
+            Debug.Print "status "; .operation
         End If
     End With
     
@@ -120,7 +119,7 @@ Sub getMetada_file()
         .connectionService initOauthFlow
         result = .getMetadata(fileID, queryParameters)
 
-        If .Operation = GO_SUCCESSFUL Then
+        If .operation = SUCCESSFUL Then
             Debug.Print result
         End If
     End With
@@ -141,7 +140,7 @@ Sub listLabels_file()
         .connectionService initOauthFlow
         result = .listLabels(fileID, queryParameters)
         
-        If .Operation = GO_SUCCESSFUL Then
+        If .operation = SUCCESSFUL Then
             Debug.Print result
         End If
     End With
@@ -206,7 +205,7 @@ Sub download_webContentLink()
     Dim drive As New GoogleDrive
     Dim fileID As String
     
-    fileID = "1FC3AXegBhMeDWtjE-cPnVWlZAENLkOjXTueMWye7L4w"
+    fileID = "1D8W2a_nTa3P6T8wwknpJQo7BfywZnxi2"
     
     With drive
         .connectionService initOauthFlow
@@ -214,3 +213,89 @@ Sub download_webContentLink()
     End With
     
 End Sub
+Sub download_standar()
+    
+    Dim drive As New GoogleDrive
+    Dim fileID As String
+    
+    On Error GoTo Catch
+    
+    fileID = "1D8W2a_nTa3P6T8wwknpJQo7BfywZnxi2"
+    
+    With drive
+        .connectionService initOauthFlow
+        Debug.Print .download(fileID, ThisWorkbook.Path & "\multimedia")
+    End With
+    Exit Sub
+Catch:
+    Debug.Print Err.Number
+    Debug.Print Err.Description
+End Sub
+Sub update_file()
+    
+    Dim drive As New GoogleDrive
+    Dim fileID As String
+    Dim fileObject As New Dictionary
+    Dim parents As New Collection
+    Dim queryParameters As New Dictionary
+    
+    fileID = "1yEKmnL2KVxJRx5qPPv0tVeeNlEB3fxiS"
+    queryParameters.Add "addParents", "1K9uf3jJizuBCz5l9Zksw31tnSr4Tebg-"
+
+    With fileObject
+        .Add "name", "lorem_ipsum.html"
+        .Add "parents", parents
+    End With
+    
+    With drive
+        .connectionService initOauthFlow()
+        Debug.Print .update(fileID, fileObject, queryParameters)
+    End With
+    
+End Sub
+Sub upload_media()
+    
+    Dim drive As New GoogleDrive
+    Dim pathFile As String
+    
+    On Error GoTo Catch
+    
+    pathFile = ThisWorkbook.Path & "\multimedia\lorem_ipsum.html"
+    With drive
+        .connectionService initOauthFlow
+        Debug.Print .uploadMedia(pathFile)
+    End With
+    Exit Sub
+Catch:
+    Debug.Print Err.Number
+    Debug.Print Err.Description
+End Sub
+Sub upload_multipart()
+    
+    Dim drive As New GoogleDrive
+    Dim pathFile As String
+    Dim fileObject As New Dictionary
+    Dim parents As New Collection
+
+    On Error GoTo Catch
+    
+    pathFile = ThisWorkbook.Path & "\multimedia\lorem_ipsum.html"
+    parents.Add "root"
+    
+    With fileObject
+        .Add "parents", parents
+        .Add "mimeType", "application/octet-stream"
+        .Add "description", "test upload multipart"
+    End With
+    
+    With drive
+        .connectionService initOauthFlow
+        Debug.Print .uploadMultipart(pathFile, fileObject)
+    End With
+    
+    Exit Sub
+Catch:
+    Debug.Print Err.Number
+    Debug.Print Err.Description
+End Sub
+

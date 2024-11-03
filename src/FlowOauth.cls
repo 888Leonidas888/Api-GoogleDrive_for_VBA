@@ -46,8 +46,8 @@ Public Function GetApiKey() As String
     GetApiKey = This.yourApiKey
 End Function
 
-Public Property Get Operation() As Variant
-    Operation = This.status
+Public Property Get operation() As Variant
+    operation = This.status
 End Property
 
 Public Sub InitializeFlow(ByVal credentialsClient As String, _
@@ -65,7 +65,7 @@ Public Sub InitializeFlow(ByVal credentialsClient As String, _
         Rem lectura de api_key;client_id;redirect_uris;client_secret
         Call readCredentialsGoogleConsole(credentialsClient, credentialsApikey)
         
-        If utils.existsFile(credentialsToken) Then
+        If Utils.existsFile(credentialsToken) Then
             Call verifyingToken(credentialsToken)
         Else
             Debug.Print APP_NAME; " "; Now(); " >>> "; "FILE NOT FOUND " & credentialsToken
@@ -88,7 +88,7 @@ Public Sub InitializeFlow(ByVal credentialsClient As String, _
             content = changeCodeForToken(code)
         
         Rem #4.- Guardar el token de acceso para su posterior uso.
-            If Me.Operation = GO_SUCCESSFUL Then
+            If Me.operation = SUCCESSFUL Then
                 Dim currentDate As Double
                 Dim currentDateField As String
                 
@@ -99,7 +99,7 @@ Public Sub InitializeFlow(ByVal credentialsClient As String, _
                 '----------------------------------------------------
                 
                 Call readTokenBeforeWrite(content)
-                utils.writeFile content, credentialsToken
+                Utils.writeFile content, credentialsToken
                 
                 Debug.Print APP_NAME; " "; Now(); " >>> "; "new token generated"
             Else
@@ -115,17 +115,17 @@ Public Function RevokeToken(ByVal credentialsToken As String) As Boolean
     Dim dicToken As Dictionary
     Dim content As String
     
-    If Not utils.existsFile(credentialsToken) Then Exit Function
+    If Not Utils.existsFile(credentialsToken) Then Exit Function
     
-    content = utils.readFile(credentialsToken)
+    content = Utils.readFile(credentialsToken)
     Set dicToken = JsonConverter.ParseJson(content)
     This.yourAccessToken = dicToken("access_token")
     
     body = "token=" & This.yourAccessToken
     headers.Add "Content-type", "application/x-www-form-urlencoded"
-    HTTPFlowOauth HT_POST, REVOKE_TOKEN_END_POINT, body, headers
+    HTTPFlowOauth HTTP_POST, REVOKE_TOKEN_END_POINT, body, headers
     
-    If Me.Operation = GO_SUCCESSFUL Then
+    If Me.operation = SUCCESSFUL Then
         Debug.Print APP_NAME; " "; Now(); " >>> "; "revoked token"
         RevokeToken = True
     Else
@@ -154,14 +154,14 @@ Private Sub readCredentialsGoogleConsole(ByVal credentialsClient As String, ByVa
     Dim content As String
     Dim app As String
     
-    If utils.existsFile(credentialsApikey) Then
-        content = utils.readFile(credentialsApikey)
+    If Utils.existsFile(credentialsApikey) Then
+        content = Utils.readFile(credentialsApikey)
         Set dicApikey = JsonConverter.ParseJson(content)
         This.yourApiKey = dicApikey("your_api_key")
     End If
           
-    If utils.existsFile(credentialsClient) Then
-        content = utils.readFile(credentialsClient)
+    If Utils.existsFile(credentialsClient) Then
+        content = Utils.readFile(credentialsClient)
         Set dicClient = JsonConverter.ParseJson(content)
         With dicClient
             If .Exists("web") Then app = "web"
@@ -171,7 +171,7 @@ Private Sub readCredentialsGoogleConsole(ByVal credentialsClient As String, ByVa
         With This
             .client_id = dicClient(app)("client_id")
             .redirect_uri = dicClient(app)("redirect_uris")(1)
-            .redirect_uri = utils.URLEncode(.redirect_uri)
+            .redirect_uri = Utils.URLEncode(.redirect_uri)
             .client_secret = dicClient(app)("client_secret")
         End With
     End If
@@ -189,12 +189,12 @@ Private Function urlRedirect(ByVal scope As String) As String
         Dim parametersPath As String
  
         response_type = "code"
-        scope = utils.URLEncode(scope)
+        scope = Utils.URLEncode(scope)
         access_type = "offline"
         include_granted_scopes = "true"
         prompt = "consent"
         
-        parametersPath = utils.fstring( _
+        parametersPath = Utils.fstring( _
         "?scope={0}&access_type={1}&include_granted_scopes={2}&response_type={3}&redirect_uri={4}&client_id={5}&prompt={6}", _
                         scope, _
                         access_type, _
@@ -213,7 +213,7 @@ Private Function changeCodeForToken(ByVal code As String) As String
     Dim body As String
     Dim headers As New Dictionary
     
-    body = utils.fstring( _
+    body = Utils.fstring( _
             "code={0}&client_id={1}&client_secret={2}&redirect_uri={3}&grant_type={4}", _
             code, _
             This.client_id, _
@@ -223,7 +223,7 @@ Private Function changeCodeForToken(ByVal code As String) As String
             
     headers.Add "Content-Type", "application/x-www-form-urlencoded"
     
-    This.responseTxt = HTTPFlowOauth(HT_POST, TOKEN_END_POINT, body, headers)
+    This.responseTxt = HTTPFlowOauth(HTTP_POST, TOKEN_END_POINT, body, headers)
     changeCodeForToken = This.responseTxt
     
     Set headers = Nothing
@@ -237,7 +237,7 @@ Private Sub verifyingToken(ByVal credentialsToken As String)
     Dim rsp As Integer
     Dim content As String
     
-    content = utils.readFile(credentialsToken)
+    content = Utils.readFile(credentialsToken)
     Set dicToken = JsonConverter.ParseJson(content)
     
     Debug.Print APP_NAME; " "; Now(); " >>> "; "token verifying"
@@ -277,7 +277,7 @@ Private Sub verifyingToken(ByVal credentialsToken As String)
             Debug.Print APP_NAME; " "; Now(); " >>> "; "requests update token"
             Call updateTokenAccess(credentialsToken)
         Else
-            content = utils.readFile(credentialsToken)
+            content = Utils.readFile(credentialsToken)
             Call readTokenBeforeWrite(content)
             Debug.Print APP_NAME; " "; Now(); " >>> "; "using token_access"
         End If
@@ -294,15 +294,15 @@ Private Sub updateTokenAccess(Optional credentialsToken As String)
     Dim content As String
     
     With This
-    body = utils.fstring( _
+    body = Utils.fstring( _
         "client_id={0}&client_secret={1}&refresh_token={2}&grant_type=refresh_token", _
         .client_id, .client_secret, .refresh_token)
     End With
     
     headers.Add "Content-Type", "application/x-www-form-urlencoded"
-    content = HTTPFlowOauth(HT_POST, TOKEN_END_POINT, body, headers)
+    content = HTTPFlowOauth(HTTP_POST, TOKEN_END_POINT, body, headers)
     
-    If Me.Operation = GO_SUCCESSFUL Then
+    If Me.operation = SUCCESSFUL Then
         Dim currentDate As Double
         Dim currentDateField As String
         
@@ -324,7 +324,7 @@ Private Sub updateTokenAccess(Optional credentialsToken As String)
         
     End If
     'guardamos respuesta exitosa o fallida
-    utils.writeFile content, credentialsToken
+    Utils.writeFile content, credentialsToken
     Set headers = Nothing
     
 End Sub
