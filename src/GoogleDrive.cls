@@ -37,16 +37,16 @@ Private Type data
     status As Integer
 End Type
 
-Private This As data
+Private this As data
 
 Public Property Get operation() As Integer
-    operation = This.status
+    operation = this.status
 End Property
 
 Public Sub connectionService(ByRef oFlowOauth As FlowOauth)
     With oFlowOauth
-        This.accessToken = .GetTokenAccess()
-        This.apiKey = .GetApiKey()
+        this.accessToken = .getTokenAccess()
+        this.apiKey = .getApiKey()
     End With
 End Sub
 
@@ -395,7 +395,7 @@ Private Function createQueryParameters(Optional pathParameters As String, Option
     End Select
     
     endPoint = endPoint + pathParameters
-    queryString = queryString + "key=" + This.apiKey + " HTTP/1.1"
+    queryString = queryString + "key=" + this.apiKey + " HTTP/1.1"
     createQueryParameters = endPoint + queryString
 
 End Function
@@ -428,7 +428,7 @@ Private Function request(ByVal method As String, ByVal url As String, _
     With http
         .Open method, url
         
-        .setRequestHeader "Authorization", "Bearer " + This.accessToken
+        .setRequestHeader "Authorization", "Bearer " + this.accessToken
         .setRequestHeader "Accept", "application/json"
         
         If Not headers Is Nothing Then
@@ -439,7 +439,7 @@ Private Function request(ByVal method As String, ByVal url As String, _
         
         .send body
         
-        This.status = .status
+        this.status = .status
         Set request = http
     End With
     
