@@ -298,4 +298,33 @@ Catch:
     Debug.Print Err.Number
     Debug.Print Err.Description
 End Sub
+Sub upload_resumable()
+    
+    Dim drive As New GoogleDrive
+    Dim filePath As String
+    Dim fileObject As New Dictionary
+    Dim parents As New Collection
+
+    On Error GoTo Catch
+
+    filePath = ThisWorkbook.Path & "\multimedia\2025-02-15_21h05_25.mp4"
+    parents.Add "root"
+    
+    With fileObject
+        .Add "parents", parents
+        .Add "mimeType", "video/mp4"
+        .Add "description", "video upload test 30-3"
+        .Add "name", "2025-02-15_21h05_25.mp4"
+    End With
+    
+    With drive
+        .connectionService initOauthFlow
+        Debug.Print .uploadResumable(filePath, fileObject)
+    End With
+    
+    Exit Sub
+Catch:
+    Debug.Print Err.Number
+    Debug.Print Err.Description
+End Sub
 

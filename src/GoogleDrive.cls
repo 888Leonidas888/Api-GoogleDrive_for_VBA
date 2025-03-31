@@ -29,6 +29,8 @@ Private Enum ERR_DRIVE
     CREATE_RESOURCE_FAILED = 6100
     DIRECTORY_NOT_FOUN_FAILD = 6101
     FILE_NOT_EXISTS_FAILD = 6102
+    GET_LOCATION_FAILED = 6103
+    UPLOAD_FRAGMENT_FAILED = 6104
 End Enum
 
 Private Type data
@@ -149,6 +151,38 @@ Public Function uploadMultipart(ByVal pathFile As String, ByRef fileObject As Di
     
 Catch:
     Err.Raise UPLOAD_MULTIPART_FAILED, , "Upload multipart failed."
+End Function
+Public Function uploadResumable(ByVal filePath As String, ByRef fileObject As Dictionary) As String
+    
+    Const MIMETYPE_DEFAULT As String = "application/octet-stream"
+    
+    Dim mimeType As String
+    Dim fileSize As Long
+    Dim uploadUrl As String
+    Dim fileNumber As Integer
+    Dim fileContent() As Byte
+        
+    On Error GoTo Catch
+    
+    If Not existsFile(filePath) Then
+        Err.Raise FILE_NOT_EXISTS_FAILD, , "File not exists."
+    End If
+    
+    fileNumber = FreeFile
+    Open filePath For Binary Access Read As #fileNumber
+        fileSize = LOF(fileNumber)
+        ReDim fileContent(fileSize - 1)
+        Get #fileNumber, , fileContent
+    Close #fileNumber
+        
+    mimeType = IIf(fileObject.Exists("mimeType"), fileObject("mimeType"), MIMETYPE_DEFAULT)
+    uploadUrl = getUriLocation(filePath, fileSize, mimeType, fileObject)
+    uploadResumable = uploadFragment(fileContent, fileSize, uploadUrl, mimeType)
+    
+    Exit Function
+    
+Catch:
+    Err.Raise UPLOAD_MULTIPART_FAILED, , "Upload resumable failed."
 End Function
 Public Function delete(ByVal fileID As String) As String
 
@@ -417,6 +451,98 @@ Private Function getNameFileForId(ByVal fileID As String) As String
     Set fileObject = Nothing
     Set queryParameters = Nothing
     
+End Function
+Private Function getUriLocation(ByVal filePath As String, ByVal fileSize As Long, ByVal mimeType As String, ByRef fileObject As Dictionary) As String
+       
+    Dim http As New MSXML2.XMLHTTP60
+    Dim url As String
+    Dim queryParameters As New Dictionary
+    Dim headers As New Dictionary
+    Dim metadata As String
+    
+    On Error GoTo Catch
+
+    metadata = JsonConverter.ConvertToJson(fileObject)
+        
+    queryParameters.Add "uploadType", "resumable"
+    url = createQueryParameters(queryParameters:=queryParameters, endPointUpload:=True)
+
+    With http
+        .Open HTTP_POST, url
+        .setRequestHeader "Authorization", "Bearer " & this.accessToken
+        .setRequestHeader "Content-Type", "application/json; charset=UTF-8"
+        .setRequestHeader "X-Upload-Content-Length", fileSize
+        .setRequestHeader "X-Upload-Content-Type", mimeType
+        .send metadata
+    End With
+    
+    If http.status <> 200 Then
+        Err.Raise UPLOAD_RESUMEABLE_FAILED, , "Error getting location."
+    End If
+    
+    getUriLocation = http.getResponseHeader("Location")
+        
+    Exit Function
+    
+Catch:
+    Err.Raise UPLOAD_RESUMEABLE_FAILED, , "aborting obtaining location."
+End Function
+Private Function uploadFragment(ByRef fileContent() As Byte, ByVal fileSize As Long, ByVal uploadUrl As String, ByVal mimeType As String) As String
+    
+    Const CHUNK_SIZE As Long = 262144
+    Dim bytesUploaded As Long
+    Dim startByte As Long
+    Dim endByte As Long
+    Dim chunk() As Byte
+    Dim i As Long
+    Dim http As New MSXML2.XMLHTTP60
+    
+    On Error GoTo Catch
+        
+    bytesUploaded = 0
+    startByte = 0
+    Do While bytesUploaded < fileSize
+        endByte = startByte + CHUNK_SIZE - 1
+        If endByte >= fileSize Then
+            endByte = fileSize - 1
+        End If
+
+        ' Redimensiona el fragmento
+        ReDim chunk(endByte - startByte)
+
+        ' Copia el fragmento del archivo
+        For i = 0 To UBound(chunk)
+            chunk(i) = fileContent(startByte + i)
+        Next i
+
+        ' Envía el fragmento
+        With http
+            .Open HTTP_PUT, uploadUrl
+            .setRequestHeader "Authorization", "Bearer " & this.accessToken
+            .setRequestHeader "Content-Range", "bytes " & startByte & "-" & endByte & "/" & fileSize
+            .setRequestHeader "Content-Type", mimeType ' Cambia según el tipo de archivo
+            .send chunk
+        End With
+        
+        ' Verifica si la petición fue exitosa
+        With http
+            If .status <> 200 And .status <> 201 And .status <> 308 Then
+                Err.Raise UPLOAD_FRAGMENT_FAILED, , "Error to upload fragment: " & _
+                                                    vbCrLf & .responseText
+            End If
+        End With
+
+        ' Actualiza el progreso
+        bytesUploaded = endByte + 1
+        startByte = bytesUploaded
+        Debug.Print "Subido: " & bytesUploaded & " de " & fileSize & " bytes"
+    Loop
+
+    uploadFragment = http.responseText
+    
+    Exit Function
+Catch:
+    Err.Raise UPLOAD_FRAGMENT_FAILED, , "Error to upload data"
 End Function
 Private Function request(ByVal method As String, ByVal url As String, _
                         Optional body = Empty, Optional headers As Dictionary) As MSXML2.ServerXMLHTTP60
