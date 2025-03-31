@@ -13,9 +13,6 @@ Para este proyecto se ha usado la **versión 3 de Google Drive**.
 
 Eh tratado de cubrir las operaciones básicas, sin embargo aún queda mucho por cubrir, si quieres colaborar con el desarrollo de este repositorio haz un fork y sube una PR para discutirlo.
 
-> [!NOTE]
-> La función de carga de recursos cubren **carga simple**, **carga multiparte** recomendada para la carga `<= 5mb` revisa para mas detalles [subir datos de archivos](https://developers.google.com/drive/api/guides/manage-uploads?hl=es-419). Cargas mayores no estan soportadas por ahora.
-
 ## Tabla de contenido
 
 1. [Instalación](#instalación)
@@ -55,10 +52,8 @@ Antes de hacer uso, debes asegurarte de tener activadas las siguientes referenci
 7. Microsoft XML, v6.0
 8. Microsoft ActiveX Data Objects 6.1 Library
 
-
 > [!NOTE]
 > Aparte de las referencias mencionadas líneas arriba, también se debe contar con el siguiente módulo [JsonConverter.bas v2.3.1](https://github.com/VBA-tools/VBA-JSON/tree/master), este módulo es imprescindible para poder manipular las respuestas que se reciban por parte de la API, no te preocupes por importarlo, los archivos ya estan equipados con dicho módulo.
-
 
 ## Configuración de entorno en Google
 
@@ -116,23 +111,23 @@ Abre tu ventana inmediato en la barra de menú: **Ver** -> **Ventana inmediato**
   4. La siguiente vista será un **No se puede encontrar esta página (localhost)**, debes ir a la barra de direcciones y copiar el valor de `code`(la parte que indica **code=**`copiar_valor`**&scope**), habrás notado que hay cuadro de diálogo **inputbox** esperando que pegues ese valor, después de aceptar se habrá generado el token en la ruta que le has indicado.
 
 ```vb
-Sub get_token_access()
-    
-    Dim oFlowOauth As New FlowOauth
+Function initOauthFlow() As FlowOauth
+    ' Use esta función para no tener que redundar en su código.
+
     Dim credentialsClient As String
     Dim credentialsToken As String
     Dim credentialsApikey As String
-    
-    credentialsClient = ThisWorkbook.path + "\credentials\clientWeb.json"
-    credentialsToken = ThisWorkbook.path + "\credentials\token.json"
-    credentialsApikey = ThisWorkbook.path + "\credentials\apikey.json"
-    
-    oFlowOauth.InitializeFlow credentialsClient, _
-                                credentialsToken, _
-                                credentialsApikey, _
-                                OU_SCOPE_DRIVE
-    
-End Sub
+    Dim fo As New FlowOauth
+
+    credentialsClient = ThisWorkbook.Path + "\credentials\clientweb.json"
+    credentialsToken = ThisWorkbook.Path + "\credentials\token.json"
+    credentialsApikey = ThisWorkbook.Path + "\credentials\apikey.json"
+
+    fo.InitializeFlow credentialsClient, credentialsToken, credentialsApikey, OU_SCOPE_DRIVE
+
+    Set initOauthFlow = fo
+
+End Function
 ```
 
 Las siguientes líneas son las que verás en tu **ventana inmediato** excepto la última línea hasta que terminé de ejecutar el proceso:
@@ -143,163 +138,80 @@ Flujo de Oauth 2.0 19/03/2024 15:57:41  >>> FILE NOT FOUND C:\Users\JHONY\Deskto
 Flujo de Oauth 2.0 19/03/2024 16:04:22  >>> new token generated
 ```
 
-
-
 ## Ejemplo de uso
 
-### Listar archivos de Google Drive
+### Listar archivos
 
 ```vb
-Sub list_drive()
-    
+Sub list_file()
+
     'Vea los siguientes enlaces para aprender hacer consultas
-    
+
     'https://developers.google.com/drive/api/v3/reference/files/list
     'https://developers.google.com/drive/api/guides/search-files?hl=es-419#specific
     'https://developers.google.com/drive/api/guides/search-files?hl=es-419#examples
-    
-    Dim credentialsClient As String
-    Dim credentialsToken As String
-    Dim credentialsApikey As String
-    
-    Dim fo As New FlowOauth
-    Dim drive As New GoogleDriveService
-    Dim response As String
-    Dim q As String
-    Dim fields As String
-    Dim pageSize As Integer
 
-    credentialsClient = ThisWorkbook.path + "\credentials\client.json"
-    credentialsToken = ThisWorkbook.path + "\credentials\token.json"
-    credentialsApikey = ThisWorkbook.path + "\credentials\apikey.json"
-    
-'   Descomente y pruebe con cada caso.
-'    q = "name contains 'vba'and trashed = false"
-'    q = "modifiedTime > '2023-02-24T12:00:00'"
-'    q = "mimeType = 'video/mp4' and trashed = false"
-    q = "mimeType = 'application/vnd.google-apps.folder' and trashed = false"
-'    fields = "nextPageToken,kind,incompleteSearch,files(name,id)"
-'    fields = "files(id,capabilities/canAddChildren)"
-    fields = "files(name,id,mimeType)"
-    pageSize = 2
-    
-    fo.InitializeFlow credentialsClient, _
-                        credentialsToken, _
-                        credentialsApikey, _
-                        OU_SCOPE_DRIVE
-    
+    Dim drive As New GoogleDrive
+    Dim queryParameters As New Dictionary
+    Dim result As String
+
+    With queryParameters
+        'parametros de consulta
+        .Add "q", "name contains 'handbook '"
+        'campos a devolver
+        .Add "fields", "files(name,id,parents,mimeType,webContentLink)"
+    End With
+
     With drive
-        .ConnectionService fo
-        
-        Rem puede s recuperar el texto para crear un objeto
-        response = .List(q, fields, pageSize)
-        
-        Rem el método Operation devolverá una constante
-        'GO_SUCCESSFUL
-        If .Operation = GO_SUCCESSFUL Then
-            Debug.Print response
-        Else
-            Debug.Print .DetailsError
+        .connectionService initOauthFlow
+        result = .list(queryParameters)
+
+        If .operation = SUCCESSFUL Then
+            Debug.Print result
         End If
     End With
-    
 End Sub
 
 ```
-En la **ventana inmediato** tendremos una salida como esta:
 
-```json
-Flujo de Oauth 2.0 19/04/2024 17:08:41  >>> flow started
-Flujo de Oauth 2.0 19/04/2024 17:08:41  >>> token verifying
-Flujo de Oauth 2.0 19/04/2024 17:08:41  >>> using token_access
-{
-  "files": [
-    {
-      "mimeType": "application/vnd.google-apps.folder",
-      "id": "1_ueAj6ORZjEIGAh7mdGkR_W5JNWoyhdy85",
-      "name": "Proyecto salmon"
-    },
-    {
-      "mimeType": "application/vnd.google-apps.folder",
-      "id": "1EIX-exARi3UxhT1FNac75HvUJ0aYUHy2",
-      "name": "New Folder"
-    }
-  ]
-}
-```
+### Cargar video
 
-> [!NOTE]
-> Aun no eh desarrollado un **clase definitiva** para capturar la respuesta, debido a que la respuesta puede ser muy extensa dependiendo de la consulta que se haga y termine devolviendo valores que no necesite, te recomiendo que uses [JsonConverter.bas v2.3.1](https://github.com/VBA-tools/VBA-JSON/tree/master) es el mismo módulo que eh venido usando para trabajar con los archivos **.json** pronto abordaré este asunto.
-
-
-### Cargar imagen
-
-Para este ejemplo usaremos el id del folder **New Folder**, donde haremos la carga, en un caso exitoso verá en la ventana inmediato los detalles del recurso cargado.
+Con este método puede cargar archivos hasta 5GB.
 
 ```vb
-Sub upload_multipart()
-    Rem metodo recomendado para archivos de <=5mb
-    
-    Dim credentialsToken As String
-    Dim credentialsApikey As String
-    
-    Dim fo As New FlowOauth
-    Dim drive As New GoogleDriveService
-    
-    Dim response As String
-    Dim pathFile As String
-    Dim parent As String
-    
-    pathFile = ThisWorkbook.path + "\img\google_drive_vba.png"
-    parent = "1EIX-exARi3UxhT1FNac75HvUJ0aYUHy2"
-    
-    credentialsClient = ThisWorkbook.path + "\credentials\clientWeb.json"
-    credentialsToken = ThisWorkbook.path + "\credentials\token.json"
-    credentialsApikey = ThisWorkbook.path + "\credentials\apikey.json"
-    
-    fo.InitializeFlow credentialsClient, _
-                        credentialsToken, _
-                        credentialsApikey, _
-                        OU_SCOPE_DRIVE
-    
-    With drive
-        .ConnectionService fo
-        .UploadMultipart pathFile, parent
-        
-        Rem el método Operation devolverá una constante
-        'GO_SUCCESSFUL
-        If .Operation = GO_SUCCESSFUL Then
-             Dim fr As FileResource
-            
-            Set fr = .CreateResource()
-            
-            With fr
-                Debug.Print "Id --> "; .id
-                Debug.Print "Name --> "; .name
-                Debug.Print "Kind --> "; .kind
-                Debug.Print "MimeType --> "; .mimeType
-            End With
-        Else
-            Debug.Print .DetailsError
-        End If
+Sub upload_resumable()
+
+    Dim drive As New GoogleDrive
+    Dim filePath As String
+    Dim fileObject As New Dictionary
+    Dim parents As New Collection
+
+    On Error GoTo Catch
+
+    filePath = ThisWorkbook.Path & "\multimedia\2025-02-15_21h05_25.mp4"
+    parents.Add "root"
+
+    With fileObject
+        .Add "parents", parents
+        .Add "mimeType", "video/mp4"
+        .Add "description", "video upload test 30-3"
+        .Add "name", "2025-02-15_21h05_25.mp4"
     End With
+
+    With drive
+        .connectionService initOauthFlow
+        Debug.Print .uploadResumable(filePath, fileObject)
+    End With
+
+    Exit Sub
+Catch:
+    Debug.Print Err.Number
+    Debug.Print Err.Description
 End Sub
-
-```
-
-ventana inmediato:
-
-```
-Flujo de Oauth 2.0 19/04/2024 17:33:21  >>> flow started
-Flujo de Oauth 2.0 19/04/2024 17:33:21  >>> token verifying
-Flujo de Oauth 2.0 19/04/2024 17:33:21  >>> using token_access
-Id --> 1pMQf_xznbssBZCpPLeApanE_NebYHU23
-Name --> google_drive_vba.png
-Kind --> drive#file
-MimeType --> image/png
 ```
 
 ## Recursos adicionales
+
 Los siguientes enlaces estan relacionados a las consultas para listar.
 
 - [Method: files.list](https://developers.google.com/drive/api/v3/reference/files/list)
